@@ -5,15 +5,12 @@ import 'package:dr_app/model/doctor.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-
 class DoctorProvider extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   bool saving = false;
   HashMap<int, Doctor> _doctorMap = HashMap<int, Doctor>();
-    HashMap<int, Doctor> get doctorMap => HashMap<int,Doctor>.from(_doctorMap);
+  HashMap<int, Doctor> get doctorMap => HashMap<int, Doctor>.from(_doctorMap);
 
-
-  
   //input: Doctor Id
   //output: delete the Doctor with the tId as his Id
   void deleteDoctor(String tId) {
@@ -30,11 +27,12 @@ class DoctorProvider extends ChangeNotifier {
           value.docs.forEach(
             (result) {
               Doctor newT = Doctor(
-                  name: result["name"],
-                  specialization: result["specialization"],
-                  startTime: result["startTime"],
-                  endTime: result["endTime"],
-                  Id: result["Id"],);
+                name: result["name"],
+                specialization: result["specialization"],
+                startTime: result["startTime"],
+                endTime: result["endTime"],
+                Id: result["Id"],
+              );
               _doctorMap.addAll({result["Id"]: newT});
             },
           );
@@ -47,11 +45,15 @@ class DoctorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
   //input: listNameController,listSpecialization, listStartWorkHour, listEndWorkHour, context
   //output: add new Doctor to Firebase and the local list
   Future<int> addDoctorToFirebase(
-      TextEditingController listNameController,TextEditingController idController, TextEditingController listSpecialization ,TextEditingController listStartWorkHour,TextEditingController listEndWorkHour, BuildContext context) async {
+      TextEditingController listNameController,
+      TextEditingController idController,
+      TextEditingController listSpecialization,
+      TextEditingController listStartWorkHour,
+      TextEditingController listEndWorkHour,
+      BuildContext context) async {
     User? authResult = _auth.currentUser;
     saving = true;
     bool isExist = false;
@@ -70,17 +72,19 @@ class DoctorProvider extends ChangeNotifier {
         "id": idController.text.toString(),
         "name": FirebaseAuth.instance.currentUser?.displayName,
         "specialization": listSpecialization.text.toString(),
-        "startTime":listStartWorkHour.text.toString(),
-        "endTime":listEndWorkHour.text.toString(),
+        "startTime": listStartWorkHour.text.toString(),
+        "endTime": listEndWorkHour.text.toString(),
       }).then((value) => Id = value.id as int);
 
-      _doctorMap.addAll({Id: Doctor(
+      _doctorMap.addAll({
+        Id: Doctor(
           name: listNameController.text.toString(),
           specialization: listSpecialization.text.toString(),
           startTime: int.parse(listStartWorkHour.text.toString()),
           endTime: int.parse(listEndWorkHour.text.toString()),
           Id: Id,
-          )});
+        )
+      });
     }
     if (isExist == true) {
       showInSnackBar("This doctor already exists", context, Theme.of(context).scaffoldBackgroundColor);
@@ -95,8 +99,6 @@ class DoctorProvider extends ChangeNotifier {
     return Id;
   }
 
-
-  
   //intput: value, context, color
   //output: make visual SnackBar with error message
   void showInSnackBar(String value, BuildContext context, Color color) {

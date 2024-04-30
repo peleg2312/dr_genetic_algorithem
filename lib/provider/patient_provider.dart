@@ -5,14 +5,11 @@ import 'package:dr_app/model/patient.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-
 class PatientProvider extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   bool saving = false;
   HashMap<int, Patient> _patientMap = HashMap<int, Patient>();
-  HashMap<int, Patient> get patientMap => HashMap<int,Patient>.from(_patientMap);
-
-
+  HashMap<int, Patient> get patientMap => HashMap<int, Patient>.from(_patientMap);
 
   //input: Patient Id
   //output: delete the Patient with the tId as his Id
@@ -36,7 +33,8 @@ class PatientProvider extends ChangeNotifier {
                   preferredDay: result["preferredDay"],
                   Id: result["Id"],
                   preferredTime: result["preferredTime"]);
-              _patientMap.addAll({result["Id"]: newT});            },
+              _patientMap.addAll({result["Id"]: newT});
+            },
           );
         },
       );
@@ -47,11 +45,15 @@ class PatientProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
   //input: listNameController, listPreferredDay, listPreferredTime, listHealthCondition, listPreferredDoctorName,context
   //output: add new Patient to Firebase and the local list
   Future<int> addPatientToFirebase(
-      TextEditingController listNameController,TextEditingController listPreferredDay,TextEditingController listPreferredTime , TextEditingController listHealthCondition ,TextEditingController listPreferredDoctorName, BuildContext context) async {
+      TextEditingController listNameController,
+      TextEditingController listPreferredDay,
+      TextEditingController listPreferredTime,
+      TextEditingController listHealthCondition,
+      TextEditingController listPreferredDoctorName,
+      BuildContext context) async {
     User? authResult = _auth.currentUser;
     saving = true;
     bool isExist = false;
@@ -70,20 +72,20 @@ class PatientProvider extends ChangeNotifier {
         "id": _auth.currentUser!.uid.toString(),
         "name": FirebaseAuth.instance.currentUser?.displayName,
         "healthCondition": listHealthCondition.text.toString(),
-        "preferredDoctorName":listPreferredDoctorName.text.toString(),
+        "preferredDoctorName": listPreferredDoctorName.text.toString(),
         "preferredDay": listPreferredDay.text.toString(),
         "preferredTime": listPreferredTime.text.toString()
-      }).then((value) => Id = value.id as int );
+      }).then((value) => Id = value.id as int);
 
-      _patientMap.addAll({Id: Patient(
-          name: listNameController.text.toString(),
-          healthCondition: listHealthCondition.text.toString(),
-          preferredDoctorName: listPreferredDoctorName.text.toString(),
-          preferredDay: int.parse(listPreferredDay.text.toString()),
-          Id: Id,
-          preferredTime: int.parse(listPreferredTime.text.toString()) 
-      )});
-      
+      _patientMap.addAll({
+        Id: Patient(
+            name: listNameController.text.toString(),
+            healthCondition: listHealthCondition.text.toString(),
+            preferredDoctorName: listPreferredDoctorName.text.toString(),
+            preferredDay: int.parse(listPreferredDay.text.toString()),
+            Id: Id,
+            preferredTime: int.parse(listPreferredTime.text.toString()))
+      });
     }
     if (isExist == true) {
       showInSnackBar("This list already exists", context, Theme.of(context).scaffoldBackgroundColor);
@@ -98,8 +100,6 @@ class PatientProvider extends ChangeNotifier {
     return Id;
   }
 
-
-  
   //intput: value, context, color
   //output: make visual SnackBar with error message
   void showInSnackBar(String value, BuildContext context, Color color) {

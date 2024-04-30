@@ -17,30 +17,25 @@ class AuthProviderApp extends ChangeNotifier {
   late String? imageProfileUrl = _auth.currentUser?.photoURL; //image profile url
   bool isAdmin = false;
 
-
-    //output: getting data from firebase and updating isAdmin
-    Future<void> fetchUserData(context) async {
+  //output: getting data from firebase and updating isAdmin
+  Future<void> fetchUserData(context) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .get()
-          .then((QuerySnapshot value) {
+      await FirebaseFirestore.instance.collection('users').get().then(
+        (QuerySnapshot value) {
           value.docs.forEach(
             (result) {
-              if (result.id == _auth.currentUser?.uid){
+              if (result.id == _auth.currentUser?.uid) {
                 isAdmin = result["admin"];
               }
             },
           );
-        },);
+        },
+      );
     } catch (error) {
       throw error;
     }
     notifyListeners();
   }
-
-
-
 
   //input: email, password, username, isLogin ,ctx
   //output: creating/login to your account
@@ -67,11 +62,10 @@ class AuthProviderApp extends ChangeNotifier {
           email: email,
           password: password,
         );
-        FirebaseFirestore.instance.collection('users').doc(authResult.user?.uid).set({
-          'username': username,
-          'email': email,
-          'admin': admin
-        });
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(authResult.user?.uid)
+            .set({'username': username, 'email': email, 'admin': admin});
         authResult.user?.updateDisplayName(username);
         userName = username;
         isAdmin = admin;
@@ -98,29 +92,22 @@ class AuthProviderApp extends ChangeNotifier {
     }
   }
 
-
   //output: uploading image to firebase
-  void uploadImage() async{
+  void uploadImage() async {
     FirebaseStorage storage = FirebaseStorage.instance;
 
     var image;
     try {
       image = await ImagePicker().pickImage(source: ImageSource.gallery);
-
     } on PlatformException catch (e) {
       return;
     }
 
-    Reference reference =
-        storage.ref().child("profileImages/${_auth.currentUser?.uid}");
-        
+    Reference reference = storage.ref().child("profileImages/${_auth.currentUser?.uid}");
+
     UploadTask uploadTask = reference.putFile(image);
 
     uploadTask.then((res) => imageProfileUrl = res.ref.getDownloadURL() as String?);
     _auth.currentUser?.updatePhotoURL(imageProfileUrl);
-
   }
-
-
-
 }

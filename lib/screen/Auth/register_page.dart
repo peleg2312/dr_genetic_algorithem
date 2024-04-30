@@ -15,10 +15,6 @@ class _RegisterPageState extends State<RegisterPage> {
   var _userName = '';
   var _userPassword = '';
 
-
-  
-
-
   //output: if valid login to your account
   void _trySubmit() {
     final isValid = _formKey.currentState?.validate();
@@ -26,13 +22,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (isValid!) {
       _formKey.currentState!.save();
-      Provider.of<AuthProviderApp>(context, listen: false).submitAuthForm(
-          _userEmail.trim(),
-          _userPassword.trim(),
-          _userName.trim(),
-          _isLogin,
-          false,
-          context);
+      Provider.of<AuthProviderApp>(context, listen: false)
+          .submitAuthForm(_userEmail.trim(), _userPassword.trim(), _userName.trim(), _isLogin, false, context);
     }
   }
 
@@ -152,13 +143,10 @@ class _RegisterPageState extends State<RegisterPage> {
         width: width * 0.5,
         height: height * 0.07,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.lightBlue,
-                Colors.purple,
-              ]),
+          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [
+            Colors.lightBlue,
+            Colors.purple,
+          ]),
           borderRadius: BorderRadius.circular(50.0),
         ),
         child: TextButton(
@@ -181,13 +169,10 @@ class _RegisterPageState extends State<RegisterPage> {
     var width = size.width;
     return Container(
       decoration: BoxDecoration(
-          gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-            Colors.lightBlue,
-            Colors.purple,
-          ])),
+          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [
+        Colors.lightBlue,
+        Colors.purple,
+      ])),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Center(
@@ -205,8 +190,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: Column(
                     children: [
                       Container(
-                        margin:
-                            EdgeInsets.symmetric(horizontal: 55, vertical: 25),
+                        margin: EdgeInsets.symmetric(horizontal: 55, vertical: 25),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -267,11 +251,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             SizedBox(height: 12),
                             Center(
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 30),
+                                padding: const EdgeInsets.symmetric(horizontal: 30),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
                                     Image.asset(
                                       "assets/icons/facebook.png",

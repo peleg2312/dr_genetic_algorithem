@@ -22,7 +22,8 @@ class _LoginPageState extends State<LoginPage> {
 
     if (isValid!) {
       _formKey.currentState!.save();
-      Provider.of<AuthProviderApp>(context, listen: false).submitAuthForm(_userEmail.trim(), _userPassword.trim(), _userName.trim(), _isLogin, false,context);
+      Provider.of<AuthProviderApp>(context, listen: false)
+          .submitAuthForm(_userEmail.trim(), _userPassword.trim(), _userName.trim(), _isLogin, false, context);
     }
   }
 
@@ -90,61 +91,61 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       Form(
-                        key: _formKey,
-                        child: Column(
-                        children: [Container(
-                        margin: EdgeInsets.symmetric(horizontal: 35),
-                        child: TextFormField(
-                          key: ValueKey('email'),
-                          textInputAction: TextInputAction.next,
-          validator: (value) {
-            if (value!.isEmpty || !value.contains('@')) {
-              return 'Please enter a valid email address.';
-            }
-            return null;
-          },
-          onSaved: (value) {
-            _userEmail = value!;
-          },
-                          decoration: const InputDecoration(
-                            border: UnderlineInputBorder(),
-                            labelText: 'email',
-                            helperText: '',
-                            prefixIcon: Icon(
-                              Icons.email,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      Container(
-                        margin: EdgeInsets.symmetric(horizontal: 35),
-                        child: TextFormField(
-                          textInputAction: TextInputAction.next,
-                           key: ValueKey('password'),
-          validator: (String? value) {
-            if (value!.isEmpty || value.length < 4) {
-              return 'Password must be at least 4 characters long.';
-            }
-            return null;
-          },
-          onSaved: (value) {
-            _userPassword = value!;
-          },
-                          decoration: const InputDecoration(
-                            border: UnderlineInputBorder(),
-                            labelText: 'password',
-                            helperText: '',
-                            prefixIcon: Icon(
-                              Icons.lock_open,
-                            ),
-                            
-                          ),
-                        ),
-                      ),],
-                      )),
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              Container(
+                                margin: EdgeInsets.symmetric(horizontal: 35),
+                                child: TextFormField(
+                                  key: ValueKey('email'),
+                                  textInputAction: TextInputAction.next,
+                                  validator: (value) {
+                                    if (value!.isEmpty || !value.contains('@')) {
+                                      return 'Please enter a valid email address.';
+                                    }
+                                    return null;
+                                  },
+                                  onSaved: (value) {
+                                    _userEmail = value!;
+                                  },
+                                  decoration: const InputDecoration(
+                                    border: UnderlineInputBorder(),
+                                    labelText: 'email',
+                                    helperText: '',
+                                    prefixIcon: Icon(
+                                      Icons.email,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                margin: EdgeInsets.symmetric(horizontal: 35),
+                                child: TextFormField(
+                                  textInputAction: TextInputAction.next,
+                                  key: ValueKey('password'),
+                                  validator: (String? value) {
+                                    if (value!.isEmpty || value.length < 4) {
+                                      return 'Password must be at least 4 characters long.';
+                                    }
+                                    return null;
+                                  },
+                                  onSaved: (value) {
+                                    _userPassword = value!;
+                                  },
+                                  decoration: const InputDecoration(
+                                    border: UnderlineInputBorder(),
+                                    labelText: 'password',
+                                    helperText: '',
+                                    prefixIcon: Icon(
+                                      Icons.lock_open,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )),
                       //Spacer(),
-                      
+
                       //button
                       Container(
                         width: width * 0.5,
@@ -159,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: TextButton(
                           child: Text(
                             'LogIn',
-                            style: TextStyle(fontSize: 20.0,color: Colors.white),
+                            style: TextStyle(fontSize: 20.0, color: Colors.white),
                           ),
                           onPressed: () {
                             _trySubmit();
@@ -179,16 +180,20 @@ class _LoginPageState extends State<LoginPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    IconButton(onPressed: (){}, icon: Image.asset(
-                                      "assets/icons/facebook.png",
-                                      height: 40,
-
-                                    ),),
-                                    IconButton(onPressed: (){}, icon:  Image.asset(
-                                      "assets/icons/google.png",
-                                      height: 40,
-                                    ),)
-                                    
+                                    IconButton(
+                                      onPressed: () {},
+                                      icon: Image.asset(
+                                        "assets/icons/facebook.png",
+                                        height: 40,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () {},
+                                      icon: Image.asset(
+                                        "assets/icons/google.png",
+                                        height: 40,
+                                      ),
+                                    )
                                   ],
                                 ),
                               ),

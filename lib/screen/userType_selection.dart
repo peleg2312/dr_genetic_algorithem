@@ -12,9 +12,8 @@ class userType extends StatefulWidget {
 }
 
 class _userTypeState extends State<userType> {
-
   @override
-  void initState(){
+  void initState() {
     super.initState();
     try {
       Provider.of<AuthProviderApp>(context, listen: false).fetchUserData(context);
@@ -25,10 +24,10 @@ class _userTypeState extends State<userType> {
 
   @override
   Widget build(BuildContext context) {
-    if(Provider.of<AuthProviderApp>(context, listen: true).isAdmin == true){
-                        return AdminMainPage();
-                      }else{
-                        return ClientMainPage();
-                      }
+    if (Provider.of<AuthProviderApp>(context, listen: true).isAdmin == true) {
+      return AdminMainPage();
+    } else {
+      return ClientMainPage();
+    }
   }
 }
