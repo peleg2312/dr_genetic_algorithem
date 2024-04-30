@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "471636430035",
+    "project_id": "drapp-603af",
+    "storage_bucket": "drapp-603af.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471636430035:android:8ce95881488a00e6129826",
+        "android_client_info": {
+          "package_name": "com.example.dr_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "471636430035-fk2mjuc0p5r7um5bkgoijmq9kmhe3fi4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxwqYmeICMaUxic2BLWXTWauyeuD7SKsg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "471636430035-fk2mjuc0p5r7um5bkgoijmq9kmhe3fi4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
