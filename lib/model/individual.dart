@@ -108,10 +108,5 @@ class Individual {
     }
   }
 
-  //IndivIdual clone() {
-    //IndivIdual indivIdual = IndivIdual();
-    // indivIdual.genes = List<int>.from(this.genes);
-    //return indivIdual;
-  //}
 }
 
