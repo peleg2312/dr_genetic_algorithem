@@ -10,7 +10,6 @@ class PatientProvider extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   bool saving = false;
   HashMap<int, Patient> _patientMap = HashMap<int, Patient>();
-
   HashMap<int, Patient> get patientMap => HashMap<int,Patient>.from(_patientMap);
 
 
