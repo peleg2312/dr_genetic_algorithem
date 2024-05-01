@@ -1,3 +1,6 @@
+import 'package:dr_app/provider/appointment_provider.dart';
+import 'package:dr_app/provider/doctors_provider.dart';
+import 'package:dr_app/provider/patient_provider.dart';
 import 'package:dr_app/screen/admin_home_page.dart';
 import 'package:dr_app/screen/client_home_page.dart';
 import 'package:dr_app/provider/auth_provider.dart';
@@ -33,6 +36,10 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProviderApp()),
+          ChangeNotifierProvider(create: (_) => DoctorProvider()),
+          ChangeNotifierProvider(create: (_) => PatientProvider()),
+          ChangeNotifierProvider(create: (_) => AppointmentProvider()),
+
         ],
         child: FutureBuilder(
           builder: (context, appSnapshot) {

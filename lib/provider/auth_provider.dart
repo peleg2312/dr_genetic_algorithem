@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 class AuthProviderApp extends ChangeNotifier {
   late String Uid;
-  final _auth = FirebaseAuth.instance;
+  FirebaseAuth _auth = FirebaseAuth.instance;
   var isLoading = false;
   bool saving = false;
   late String? userName = _auth.currentUser?.displayName;
@@ -19,12 +19,13 @@ class AuthProviderApp extends ChangeNotifier {
 
   //output: getting data from firebase and updating isAdmin
   Future<void> fetchUserData(context) async {
+    _auth = FirebaseAuth.instance;
     try {
       await FirebaseFirestore.instance.collection('users').get().then(
         (QuerySnapshot value) {
           value.docs.forEach(
             (result) {
-              if (result.id == _auth.currentUser?.uid) {
+              if (result["email"] == _auth.currentUser?.email) {
                 isAdmin = result["admin"];
               }
             },

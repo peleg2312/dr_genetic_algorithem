@@ -177,7 +177,7 @@ class ProfileFields extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Container(
                   width: 300,
-                  child: Provider.of<AuthProviderApp>(context).userPhone == null
+                  child: Provider.of<AuthProviderApp>(context).userPhone == ""
                       ? Text("Phone: Not set", style: TextStyle(fontSize: 20))
                       : Text("Phone: " + Provider.of<AuthProviderApp>(context).userPhone!,
                           style: TextStyle(fontSize: 20)),

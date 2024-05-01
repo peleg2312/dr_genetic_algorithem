@@ -2,6 +2,7 @@
 import 'package:dr_app/model/appointment.dart';
 import 'package:dr_app/provider/appointment_provider.dart';
 import 'package:dr_app/provider/auth_provider.dart';
+import 'package:dr_app/provider/patient_provider.dart';
 import 'package:dr_app/styles/colors.dart';
 import 'package:dr_app/styles/styles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -53,13 +54,14 @@ class _ClientMainPageState extends State<ClientMainPage> {
               SizedBox(
                 height: height * 0.1,
               ),
-              myAppointment == null
+              myAppointment!.doctorName == ""
                   ? const Center(
                       child: Text("there are no appointment yet"),
                     )
                   : AppointmentCard(context, myAppointment!),
+                  
               SizedBox(
-                height: height * 0.5,
+                height: height * 0.3,
               ),
               const AppointmentButton()
             ],
@@ -213,12 +215,21 @@ class AppointmentButton extends StatelessWidget {
                         timeController.text == "") {
                       showInSnackBar("Enter Valid Name", context, Colors.red);
                       return;
+                    }else{
+                        Provider.of<PatientProvider>(context, listen: false).addPatientToFirebase(
+                      dateController,
+                      timeController,
+                      healnaseController,
+                      doctorNameController,
+                      context
+                    );
                     }
+                    
 
                     Navigator.of(context).pop();
                   }),
                   child: const Text(
-                    "Add Team",
+                    "Add Appointment",
                     style: TextStyle(color: Colors.red),
                   ))
             ],
@@ -256,27 +267,21 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Color(MyColors.bg01),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
+                  
+                  
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(myAppointment.doctorName, style: const TextStyle(color: Colors.white)),
+                          Text("Doctor name: " + myAppointment.doctorName[0].toUpperCase()+myAppointment.doctorName.substring(1), style: const TextStyle(color: Colors.white,fontSize: 15)),
                           const SizedBox(
                             height: 2,
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    
                   const SizedBox(
                     height: 20,
                   ),
@@ -328,30 +333,7 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
           ),
         ),
       ),
-      Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        width: double.infinity,
-        height: 10,
-        decoration: BoxDecoration(
-          color: Color(MyColors.bg02),
-          borderRadius: const BorderRadius.only(
-            bottomRight: Radius.circular(10),
-            bottomLeft: Radius.circular(10),
-          ),
-        ),
-      ),
-      Container(
-        margin: const EdgeInsets.symmetric(horizontal: 40),
-        width: double.infinity,
-        height: 10,
-        decoration: BoxDecoration(
-          color: Color(MyColors.bg03),
-          borderRadius: const BorderRadius.only(
-            bottomRight: Radius.circular(10),
-            bottomLeft: Radius.circular(10),
-          ),
-        ),
-      ),
+      
     ],
   );
 }
@@ -382,21 +364,21 @@ Widget UserIntro(BuildContext context) {
               style: TextStyle(fontWeight: FontWeight.w500, fontSize: 30),
             ),
           Text(
-            userName[0].toUpperCase() + userName.substring(1),
+            userName == ""? "" :userName[0].toUpperCase() + userName.substring(1),
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
           ),
           Text(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).toString().substring(0, 10))
         ],
       ),
       InkWell(
-        child: Provider.of<AuthProviderApp>(context, listen: false).imageProfileUrl == null
+        child: Provider.of<AuthProviderApp>(context, listen: false).imageProfileUrl == ""
             ? CircleAvatar(
                 backgroundColor: Color(MyColors.bg02),
                 radius: 30,
               )
             : CircleAvatar(
-                backgroundImage: Image.network(Provider.of<AuthProviderApp>(context, listen: false).imageProfileUrl!)
-                    as ImageProvider,
+                backgroundImage: AssetImage(Provider.of<AuthProviderApp>(context, listen: false).imageProfileUrl!)
+                    
               ),
         onTap: () {
           Navigator.pushNamed(context, '/profile');

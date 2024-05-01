@@ -242,34 +242,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                         ),
                       ),
-                      //Button
-                      SizedBox(height: 10),
-                      Container(
-                        child: Column(
-                          children: [
-                            Text("Or SignUp Using"),
-                            SizedBox(height: 12),
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 30),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    Image.asset(
-                                      "assets/icons/facebook.png",
-                                      height: 40,
-                                    ),
-                                    Image.asset(
-                                      "assets/icons/google.png",
-                                      height: 40,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                     
                     ],
                   ),
                 )

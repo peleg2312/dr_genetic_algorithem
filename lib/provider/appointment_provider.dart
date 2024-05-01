@@ -43,7 +43,7 @@ class AppointmentProvider extends ChangeNotifier {
   //input: patientId
   //output: get the patient appointment
   Appointment getPatientAppointment() {
-    return _appointments.firstWhere((element) => element.patientId == _auth.currentUser!.uid);
+    return _appointments.firstWhere((element) => element.patientId == int.parse(_auth.currentUser!.uid),orElse: ()=>Appointment(doctorName: "", time: 0, day: 0, patientName: "", patientId: 0));
   }
 
 

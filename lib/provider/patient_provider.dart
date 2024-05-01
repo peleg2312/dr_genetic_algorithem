@@ -48,7 +48,6 @@ class PatientProvider extends ChangeNotifier {
   //input: listNameController, listPreferredDay, listPreferredTime, listHealthCondition, listPreferredDoctorName,context
   //output: add new Patient to Firebase and the local list
   Future<int> addPatientToFirebase(
-      TextEditingController listNameController,
       TextEditingController listPreferredDay,
       TextEditingController listPreferredTime,
       TextEditingController listHealthCondition,
@@ -61,13 +60,13 @@ class PatientProvider extends ChangeNotifier {
     QuerySnapshot query = await FirebaseFirestore.instance.collection("Patients").get();
 
     query.docs.forEach((doc) {
-      if (listNameController.text.toString() == doc.id) {
+      if (listPreferredDoctorName.text.toString() == doc.id) {
         isExist = true;
       }
     });
 
     int Id = 0;
-    if (isExist == false && listNameController.text.isNotEmpty) {
+    if (isExist == false && listPreferredDoctorName.text.isNotEmpty) {
       await FirebaseFirestore.instance.collection("Patients").add({
         "id": _auth.currentUser!.uid.toString(),
         "name": FirebaseAuth.instance.currentUser?.displayName,
@@ -79,7 +78,7 @@ class PatientProvider extends ChangeNotifier {
 
       _patientMap.addAll({
         Id: Patient(
-            name: listNameController.text.toString(),
+            name: FirebaseAuth.instance.currentUser!.displayName.toString(),
             healthCondition: listHealthCondition.text.toString(),
             preferredDoctorName: listPreferredDoctorName.text.toString(),
             preferredDay: int.parse(listPreferredDay.text.toString()),
@@ -91,11 +90,14 @@ class PatientProvider extends ChangeNotifier {
       showInSnackBar("This list already exists", context, Theme.of(context).scaffoldBackgroundColor);
       saving = false;
     }
-    if (listNameController.text.isEmpty) {
+    if (listPreferredDoctorName.text.isEmpty) {
       showInSnackBar("Please enter a name", context, Theme.of(context).scaffoldBackgroundColor);
       saving = false;
     }
-    listNameController.clear();
+    listPreferredDoctorName.clear();
+    listHealthCondition.clear();
+    listPreferredDay.clear();
+    listPreferredTime.clear();
     notifyListeners();
     return Id;
   }

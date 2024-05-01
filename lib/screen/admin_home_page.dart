@@ -92,7 +92,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
                     }));
               },
               child: Container(
-                width: width * 0.5,
+                width: width * 0.2,
                 height: height * 0.05,
                 child: const Center(
                   child: Text(
@@ -602,16 +602,17 @@ class DoctorAddButton extends StatelessWidget {
                         idController.text.isEmpty ||
                         idController.text == "") {
                       showInSnackBar("Enter Valid values", context, Colors.red);
-                      return;
+                      
                     } else {
-                      Provider.of<DoctorProvider>(context).addDoctorToFirebase(doctorNameController, idController,
-                          healnaseController, startWorkingHour, endWorkingHour, context);
+                      
                     }
+                    Provider.of<DoctorProvider>(context).addDoctorToFirebase(doctorNameController, idController,
+                          healnaseController, startWorkingHour, endWorkingHour, context);
 
                     Navigator.of(context).pop();
                   }),
                   child: const Text(
-                    "Add Team",
+                    "Add Doctor",
                     style: TextStyle(color: Colors.red),
                   ))
             ],
