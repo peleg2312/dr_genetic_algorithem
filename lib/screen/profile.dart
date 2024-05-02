@@ -59,27 +59,24 @@ class _ProfileState extends State<Profile> {
             alignment: Alignment.center,
             child: Stack(
               children: [
-                // Provider.of<AuthProviderApp>(context, listen: true)
-                //         .imageProfileUrl ==
-                //     null
-                // ?
-                InkWell(
-                  child: CircleAvatar(
-                    backgroundColor: Color(MyColors.bg01),
-                    radius: height * 0.15,
-                  ),
-                  onTap: () {
-                    Provider.of<AuthProviderApp>(context, listen: false).uploadImage();
-                  },
-                )
-                // : InkWell(
-                //     child: CircleAvatar(
-                //       radius: height * 0.15,
-                //       backgroundImage: Image.network(
-                //           Provider.of<AuthProviderApp>(context, listen: false)
-                //               .imageProfileUrl!) as ImageProvider,
-                //     ),
-                //   )
+                Provider.of<AuthProviderApp>(context, listen: true).imageProfileUrl == null
+                    ? InkWell(
+                        child: CircleAvatar(
+                          backgroundColor: Color(MyColors.bg01),
+                          radius: height * 0.15,
+                        ),
+                        onTap: () {
+                          Provider.of<AuthProviderApp>(context, listen: false).uploadImage();
+                        },
+                      )
+                    : InkWell(
+                        child: CircleAvatar(
+                          radius: height * 0.15,
+                          backgroundImage:
+                              AssetImage(Provider.of<AuthProviderApp>(context, listen: false).imageProfileUrl!)
+                                  as ImageProvider,
+                        ),
+                      )
               ],
             )),
         SizedBox(
