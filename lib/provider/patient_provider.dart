@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dr_app/model/patient.dart';
+import 'package:dr_app/styles/healthConditions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -79,7 +80,7 @@ class PatientProvider extends ChangeNotifier {
       _patientMap.addAll({
         Id: Patient(
             name: FirebaseAuth.instance.currentUser!.displayName.toString(),
-            healthCondition: listHealthCondition.text.toString(),
+            healthCondition: listHealthCondition.text.toString() as Health,
             preferredDoctorName: listPreferredDoctorName.text.toString(),
             preferredDay: int.parse(listPreferredDay.text.toString()),
             Id: Id,
@@ -100,6 +101,24 @@ class PatientProvider extends ChangeNotifier {
     listPreferredTime.clear();
     notifyListeners();
     return Id;
+  }
+  Future<int> addPatientsToFirebase(HashMap<int,Patient> patients,
+      BuildContext context) async {
+    User? authResult = _auth.currentUser;
+    saving = true;
+    bool isExist = false;
+
+   for (var element in patients.values) {
+     await FirebaseFirestore.instance.collection("Patients").add({
+        "id": element.Id,
+        "name": element.name,
+        "healthCondition": element.healthCondition,
+        "preferredDoctorName": element.preferredDoctorName,
+        "preferredDay": element.preferredDay,
+        "preferredTime": element.preferredTime});
+   
+   }
+   return 1; 
   }
 
   //intput: value, context, color

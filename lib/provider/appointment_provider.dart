@@ -46,6 +46,18 @@ class AppointmentProvider extends ChangeNotifier {
     return _appointments.firstWhere((element) => element.patientId == int.parse(_auth.currentUser!.uid),orElse: ()=>Appointment(doctorName: "", time: 0, day: 0, patientName: "", patientId: 0));
   }
 
+  //input: individual
+  //output: return appointment list
+  List<Appointment> getIndividualAppointments(Individual individual) {
+    List<Appointment> individualAppointments = [];
+    for (var genes in individual.genes) {
+      for (var gene in genes) {
+        individualAppointments.add(new Appointment(doctorName: gene.doctor.name, patientName:  gene.patient.name, day:   gene.day, time: gene.time, patientId: gene.patient.Id));
+      }
+    }
+    return individualAppointments;
+  }
+
 
   //input: individual
   //output: add new Appointment to Firebase and the local list

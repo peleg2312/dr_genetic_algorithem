@@ -29,7 +29,7 @@ class Individual {
       int time = rng.nextInt(doctor.endTime - doctor.startTime) + doctor.startTime;
       int day = rng.nextInt(5);
       Gene cGene = new Gene(patient: patient, doctor: doctor, time: time, day: day);
-      while(cGene.checkIfGeneIsValid() == false){
+      while( !doctor.specialization.contains(patient.healthCondition) && cGene.checkIfGeneIsValid() == false){
         doctor = doctors[rng.nextInt(doctors.length)]!;
         time = rng.nextInt(doctor.endTime - doctor.startTime) + doctor.startTime;
         day = rng.nextInt(5);

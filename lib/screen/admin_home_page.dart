@@ -1,17 +1,22 @@
 import 'dart:collection';
-
+import 'dart:ffi';
+import 'dart:isolate';
 import 'package:dr_app/model/appointment.dart';
 import 'package:dr_app/model/doctor.dart';
 import 'package:dr_app/model/patient.dart';
-import 'package:dr_app/model/shedule.dart';
+import 'package:dr_app/provider/shedule.dart';
 import 'package:dr_app/provider/appointment_provider.dart';
 import 'package:dr_app/provider/patient_provider.dart';
 import 'package:dr_app/provider/doctors_provider.dart';
 import 'package:dr_app/styles/colors.dart';
 import 'package:dr_app/screen/client_home_page.dart';
+import 'package:dr_app/styles/data.dart';
+import 'package:dr_app/styles/days.dart';
+import 'package:dr_app/styles/widgetCards.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 
 class AdminMainPage extends StatefulWidget {
@@ -25,6 +30,10 @@ class _AdminMainPageState extends State<AdminMainPage> {
   HashMap<int, Patient> patients = HashMap<int, Patient>();
   List<Appointment> appointments = [];
   HashMap<int, Doctor> doctors = HashMap<int, Doctor>();
+  var fittest = null;
+  bool running = false;
+  double generationCount = 1.0;
+  List<Days> days = Days.values;
 
   //output: fetch data from Firebase
   @override
@@ -50,65 +59,59 @@ class _AdminMainPageState extends State<AdminMainPage> {
 
   @override
   Widget build(BuildContext context) {
-    patients = Provider.of<PatientProvider>(context).patientMap;
+    Data data = Data();
+    patients = data.patinets;
+    doctors = data.doctors;
     appointments = Provider.of<AppointmentProvider>(context).appointments;
-    doctors = Provider.of<DoctorProvider>(context).doctorMap;
-    Schedule schedule = new Schedule(doctors, patients, context);
+    Schedule schedule = Schedule(doctors, patients);
     var size = MediaQuery.of(context).size;
     var height = size.height;
+    
+    
     var width = size.width;
     return Scaffold(
       floatingActionButton: patients.isNotEmpty
-          ? FloatingActionButton(
-              onPressed: () async {
-                showDialog(
-                    context: context,
-                    builder: ((context) {
-                      return AlertDialog(
-                        title: Text("Start?"),
-                        actions: [
-                          TextButton(
-                              onPressed: () async {
-                                showDialog(
-                                    context: context,
-                                    builder: ((context) {
-                                      return AlertDialog(
-                                        content: Text("The Algorithm runing pls wait for it to finish"),
-                                      );
-                                    }));
-                                await schedule.runGeneticAlgorithm();
-                                setState(() {});
-                                Navigator.of(context).pop();
-                                Navigator.of(context).pop();
-                              },
-                              child: Text("yes")),
-                          TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: Text("no"))
-                        ],
-                      );
-                    }));
-              },
-              child: Container(
-                width: width * 0.2,
-                height: height * 0.05,
-                child: const Center(
-                  child: Text(
-                    "Start Algorithm",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ? Container(
+            width: width * 0.2,
+            child: FloatingActionButton(
+                onPressed: () async {
+                  showDialog(
+                      context: context,
+                      builder: ((context) {
+                        return AlertDialog(
+                          title: const Text("Start?"),
+                          actions: [
+                            TextButton(
+                                onPressed: () async {                    
+                                  _runAlgorithm(schedule, context);
+                                },
+                                child: const Text("yes")),
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text("no"))
+                          ],
+                        );
+                      }));
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [
+                      Colors.lightBlue,
+                      Colors.purple,
+                    ]),
+                    borderRadius: BorderRadius.circular(59.0),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "Start Algorithm",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [
-                    Colors.lightBlue,
-                    Colors.purple,
-                  ]),
-                  borderRadius: BorderRadius.circular(59.0),
-                ),
               ),
-            )
+          )
           : null,
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(0, 255, 255, 255),
@@ -131,39 +134,99 @@ class _AdminMainPageState extends State<AdminMainPage> {
           )
         ],
       ),
-      body: Column(children: [
-        patients.isEmpty
-            ? const Center(
-                child: Text("there are no appointments request",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-              )
-            : Container(
-                height: 120,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[for (var doctor in doctors.values) DoctorCard(context, doctor)],
+      body: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 100),
+            child: Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                patients.isEmpty
+                    ? const Center(
+                        child: Text("there are no appointments request",
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                      )
+                    : Container(
+                        height: 250,
+                        width: 400,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[Text(doctors.length.toString()+ " Doctors", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),DoctorCard(context, doctors.values.toList()[0])],
+                        ),
+                      ),
+                SizedBox(
+                  height: height * 0.05,
                 ),
-              ),
-        SizedBox(
-          height: height * 0.3,
-        ),
-        doctors.isEmpty
-            ? const Center(
-                child: Text("there is no doctors", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-              )
-            : Container(
-                height: 120,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[for (var patient in patients.values) PatientAppintmentCard(context, patient)],
+                doctors.isEmpty
+                    ? const Center(
+                        child: Text("there is no doctors", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                      )
+                    : Container(
+                        height: 250,
+                        width: 400,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[ Text(patients.length.toString()+ " Patients", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),PatientAppintmentCard(context, patients.values.toList()[0])],
+                        ),
+                      ),
+                SizedBox(
+                  height: height * 0.03,
                 ),
-              ),
-        SizedBox(
-          height: height * 0.03,
-        ),
-        const DoctorAddButton()
-      ]),
+                const DoctorAddButton()
+              ]),
+            ),
+          ),SizedBox(width: width * 0.2,),
+          //AlgorithmAppearance()
+            
+          
+        ],
+      ),
     );
+  }
+
+  Widget AlgorithmAppearance(){
+    appointments = Provider.of<AppointmentProvider>(context,listen:false).getIndividualAppointments(fittest);
+    return running?
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              
+              Container(child: LoadingAnimationWidget.staggeredDotsWave(
+                      color: const Color.fromARGB(255, 114, 20, 130),
+                      size: 200,
+                    ),),
+                    Text((generationCount/10).toString()+"%")]):appointments.isEmpty?Container():Container(
+                        height: 220,
+                        width: 400,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[Text(appointments.length.toString()+ " Appointments", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),AppointmentCard(context, appointments[0])],
+                        ),
+                      );
+            
+  }
+
+
+
+  void _runAlgorithm(Schedule schedule, BuildContext context) async{
+    ReceivePort myReceivePort = ReceivePort();
+    await Isolate.spawn(schedule.runGeneticAlgorithm, myReceivePort.sendPort);
+    setState(() {running = true;});
+    Navigator.of(context).pop();
+    myReceivePort.listen((result){
+      if(result != "finished"){
+        setState(() {
+        generationCount++;
+      });
+      }else{
+        print("end");
+        setState((){running = false;
+        fittest = schedule.population.individuals[0];
+        generationCount = 0;
+        });
+      }
+    });
   }
 
   void LogOut() {
@@ -189,253 +252,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
                 )
               ],
             )));
-  }
-
-  Widget DoctorCard(BuildContext context, Doctor doctor) {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Color(MyColors.primary),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Color(MyColors.bg01),
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(doctor.name, style: const TextStyle(color: Colors.white)),
-                            const SizedBox(
-                              height: 2,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Color(MyColors.bg01),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.health_and_safety,
-                            color: Colors.white,
-                            size: 15,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Text(
-                            doctor.specialization,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          const Icon(
-                            Icons.access_alarm,
-                            color: Colors.white,
-                            size: 17,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Flexible(
-                            child: Text(
-                              doctor.startTime.toString() + " ~ " + doctor.endTime.toString(),
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          width: double.infinity,
-          height: 10,
-          decoration: BoxDecoration(
-            color: Color(MyColors.bg02),
-            borderRadius: const BorderRadius.only(
-              bottomRight: Radius.circular(10),
-              bottomLeft: Radius.circular(10),
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 40),
-          width: double.infinity,
-          height: 10,
-          decoration: BoxDecoration(
-            color: Color(MyColors.bg03),
-            borderRadius: const BorderRadius.only(
-              bottomRight: Radius.circular(10),
-              bottomLeft: Radius.circular(10),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget PatientAppintmentCard(BuildContext context, Patient patient) {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Color(MyColors.primary),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Color(MyColors.bg01),
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(patient.name, style: const TextStyle(color: Colors.white)),
-                            const SizedBox(
-                              height: 2,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Color(MyColors.bg01),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.new_label,
-                            color: Colors.white,
-                            size: 15,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Text(
-                            patient.preferredDoctorName,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          const Icon(
-                            Icons.health_and_safety,
-                            color: Colors.white,
-                            size: 15,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Text(
-                            patient.healthCondition,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          const Icon(
-                            Icons.access_alarm,
-                            color: Colors.white,
-                            size: 17,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Flexible(
-                            child: Text(
-                              patient.preferredDay.toString() + "/" + patient.preferredTime.toString(),
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          width: double.infinity,
-          height: 10,
-          decoration: BoxDecoration(
-            color: Color(MyColors.bg02),
-            borderRadius: const BorderRadius.only(
-              bottomRight: Radius.circular(10),
-              bottomLeft: Radius.circular(10),
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 40),
-          width: double.infinity,
-          height: 10,
-          decoration: BoxDecoration(
-            color: Color(MyColors.bg03),
-            borderRadius: const BorderRadius.only(
-              bottomRight: Radius.circular(10),
-              bottomLeft: Radius.circular(10),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
+  }}
 
 class DoctorAddButton extends StatelessWidget {
   const DoctorAddButton({Key? key}) : super(key: key);
@@ -460,18 +277,18 @@ class DoctorAddButton extends StatelessWidget {
         child: Container(
           width: width * 0.3,
           height: height * 0.05,
-          child: const Center(
-            child: Text(
-              "Add Doctor",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-          ),
           decoration: BoxDecoration(
             gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [
               Colors.lightBlue,
               Colors.purple,
             ]),
             borderRadius: BorderRadius.circular(59.0),
+          ),
+          child: const Center(
+            child: Text(
+              "Add Doctor",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
           ),
         ),
       ),
@@ -498,10 +315,10 @@ class DoctorAddButton extends StatelessWidget {
               children: [
                 TextFormField(
                   cursorColor: const Color.fromARGB(255, 54, 149, 244),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                       border: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
                       labelText: "Doctor's name",
-                      contentPadding: const EdgeInsets.only(left: 16.0, top: 20.0, right: 16.0, bottom: 5.0)),
+                      contentPadding: EdgeInsets.only(left: 16.0, top: 20.0, right: 16.0, bottom: 5.0)),
                   controller: doctorNameController,
                   autofocus: true,
                   style: const TextStyle(
@@ -515,10 +332,10 @@ class DoctorAddButton extends StatelessWidget {
                 ),
                 TextFormField(
                   cursorColor: const Color.fromARGB(255, 54, 149, 244),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                       border: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
                       labelText: "Doctor's ID",
-                      contentPadding: const EdgeInsets.only(left: 16.0, top: 20.0, right: 16.0, bottom: 5.0)),
+                      contentPadding: EdgeInsets.only(left: 16.0, top: 20.0, right: 16.0, bottom: 5.0)),
                   controller: idController,
                   autofocus: true,
                   style: const TextStyle(
@@ -532,10 +349,10 @@ class DoctorAddButton extends StatelessWidget {
                 ),
                 TextFormField(
                   cursorColor: const Color.fromARGB(255, 54, 149, 244),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                       border: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
                       labelText: "Health concern",
-                      contentPadding: const EdgeInsets.only(left: 16.0, top: 10.0, right: 16.0, bottom: 5.0)),
+                      contentPadding: EdgeInsets.only(left: 16.0, top: 10.0, right: 16.0, bottom: 5.0)),
                   controller: healnaseController,
                   autofocus: true,
                   style: const TextStyle(
@@ -549,10 +366,10 @@ class DoctorAddButton extends StatelessWidget {
                 ),
                 TextFormField(
                   cursorColor: const Color.fromARGB(255, 54, 149, 244),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                       border: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
                       labelText: "Start Hour",
-                      contentPadding: const EdgeInsets.only(left: 16.0, top: 10.0, right: 16.0, bottom: 5.0)),
+                      contentPadding: EdgeInsets.only(left: 16.0, top: 10.0, right: 16.0, bottom: 5.0)),
                   controller: startWorkingHour,
                   autofocus: true,
                   style: const TextStyle(
@@ -566,10 +383,10 @@ class DoctorAddButton extends StatelessWidget {
                 ),
                 TextFormField(
                   cursorColor: const Color.fromARGB(255, 54, 149, 244),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                       border: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
                       labelText: "End Hour",
-                      contentPadding: const EdgeInsets.only(left: 16.0, top: 10.0, right: 16.0, bottom: 5.0)),
+                      contentPadding: EdgeInsets.only(left: 16.0, top: 10.0, right: 16.0, bottom: 5.0)),
                   controller: endWorkingHour,
                   autofocus: true,
                   style: const TextStyle(

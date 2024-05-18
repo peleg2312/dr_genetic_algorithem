@@ -1,6 +1,8 @@
+import 'package:dr_app/styles/healthConditions.dart';
+
 class Patient {
   String name;
-  String healthCondition;
+  Health healthCondition;
   String preferredDoctorName;
   int Id;
   int preferredDay;

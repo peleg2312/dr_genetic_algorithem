@@ -1,6 +1,8 @@
+import 'package:dr_app/styles/healthConditions.dart';
+
 class Doctor {
   String name;
-  String specialization;
+  List<Health> specialization;
   int startTime;
   int endTime;
   late List<List<bool>> avelability = List<List<bool>>.filled(5, List<bool>.filled((endTime-startTime)*2, false));

@@ -1,3 +1,7 @@
+import 'dart:collection';
+
+import 'package:dr_app/model/doctor.dart';
+import 'package:dr_app/model/patient.dart';
 import 'package:dr_app/provider/appointment_provider.dart';
 import 'package:dr_app/provider/doctors_provider.dart';
 import 'package:dr_app/provider/patient_provider.dart';
@@ -31,8 +35,13 @@ void main() async {
 class MyApp extends StatelessWidget {
   final Future<FirebaseApp> _initialization = Firebase.initializeApp();
 
+
+
+
   @override
   Widget build(BuildContext context) {
+
+
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProviderApp()),
@@ -52,6 +61,8 @@ class MyApp extends StatelessWidget {
                   stream: FirebaseAuth.instance.authStateChanges(),
                   builder: (ctx, userSnapshot) {
                     if (userSnapshot.hasData) {
+                      // Provider.of<DoctorProvider>(context).addDoctorsToFirebase(doctors,context);
+                      // Provider.of<PatientProvider>(context).addPatientsToFirebase(patients,context);
                       return userType();
                     }
                     return LoginPage();

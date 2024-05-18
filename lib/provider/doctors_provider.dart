@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dr_app/model/doctor.dart';
+import 'package:dr_app/styles/healthConditions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -79,7 +80,7 @@ class DoctorProvider extends ChangeNotifier {
       _doctorMap.addAll({
         Id: Doctor(
           name: listNameController.text.toString(),
-          specialization: listSpecialization.text.toString(),
+          specialization: listSpecialization.text.split(",") as List<Health>,
           startTime: int.parse(listStartWorkHour.text.toString()),
           endTime: int.parse(listEndWorkHour.text.toString()),
           Id: Id,
@@ -97,6 +98,24 @@ class DoctorProvider extends ChangeNotifier {
     listNameController.clear();
     notifyListeners();
     return Id;
+  }
+
+  Future<int> addDoctorsToFirebase(HashMap<int,Doctor> doctors,
+      BuildContext context) async {
+    User? authResult = _auth.currentUser;
+    saving = true;
+    bool isExist = false;
+
+   for (var element in doctors.values) {
+     await FirebaseFirestore.instance.collection("Doctors").add({
+        "id": element.Id,
+        "name": element.name,
+        "specialization": element.specialization,
+        "startTime": element.startTime,
+        "endTime": element.endTime,});
+   
+   }
+   return 1; 
   }
 
   //intput: value, context, color

@@ -4,10 +4,13 @@ import 'package:dr_app/provider/appointment_provider.dart';
 import 'package:dr_app/provider/auth_provider.dart';
 import 'package:dr_app/provider/patient_provider.dart';
 import 'package:dr_app/styles/colors.dart';
+import 'package:dr_app/styles/days.dart';
 import 'package:dr_app/styles/styles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../styles/widgetCards.dart';
 
 class ClientMainPage extends StatefulWidget {
   const ClientMainPage({
@@ -250,93 +253,6 @@ class AppointmentButton extends StatelessWidget {
   }
 }
 
-//input: context, Appointment
-//output: return widget that display appointment card
-Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
-  return Column(
-    children: [
-      Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Color(MyColors.primary),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  
-                  
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Doctor name: " + myAppointment.doctorName[0].toUpperCase()+myAppointment.doctorName.substring(1), style: const TextStyle(color: Colors.white,fontSize: 15)),
-                          const SizedBox(
-                            height: 2,
-                          ),
-                        ],
-                      ),
-                    
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Color(MyColors.bg01),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.calendar_today,
-                          color: Colors.white,
-                          size: 15,
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Text(
-                          myAppointment.day.toString(),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        const Icon(
-                          Icons.access_alarm,
-                          color: Colors.white,
-                          size: 17,
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Flexible(
-                          child: Text(
-                            myAppointment.time.toString() + " ~ " + (myAppointment.time + 1).toString(),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      
-    ],
-  );
-}
 
 Widget UserIntro(BuildContext context) {
   var userName = Provider.of<AuthProviderApp>(context).userName!;
