@@ -29,12 +29,12 @@ class DoctorProvider extends ChangeNotifier {
             (result) {
               Doctor newT = Doctor(
                 name: result["name"],
-                specialization: result["specialization"],
+                specialization: stringtoHealth(result["specialization"]),
                 startTime: result["startTime"],
                 endTime: result["endTime"],
-                Id: result["Id"],
+                Id: result["id"],
               );
-              _doctorMap.addAll({result["Id"]: newT});
+              _doctorMap.addAll({result["id"]: newT});
             },
           );
         },
@@ -110,7 +110,7 @@ class DoctorProvider extends ChangeNotifier {
      await FirebaseFirestore.instance.collection("Doctors").add({
         "id": element.Id,
         "name": element.name,
-        "specialization": element.specialization,
+        "specialization": element.specialization.map((e) => e.name).toList().join(","),
         "startTime": element.startTime,
         "endTime": element.endTime,});
    

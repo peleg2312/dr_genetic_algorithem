@@ -13,6 +13,7 @@ class AuthProviderApp extends ChangeNotifier {
   late String? userName = _auth.currentUser?.displayName;
   late String? userEmail = _auth.currentUser?.email;
   late String? userPhone = _auth.currentUser?.phoneNumber;
+  int userId = 0;
   var storageReference = FirebaseStorage.instance.ref();
   late String? imageProfileUrl = _auth.currentUser?.photoURL; //image profile url
   bool isAdmin = false;
@@ -27,6 +28,7 @@ class AuthProviderApp extends ChangeNotifier {
             (result) {
               if (result["email"] == _auth.currentUser?.email) {
                 isAdmin = result["admin"];
+                userId = result["id"];
               }
             },
           );
@@ -44,6 +46,7 @@ class AuthProviderApp extends ChangeNotifier {
     String email,
     String password,
     String username,
+    String id,
     bool admin,
     bool isLogin,
     BuildContext ctx,
@@ -66,7 +69,7 @@ class AuthProviderApp extends ChangeNotifier {
         FirebaseFirestore.instance
             .collection('users')
             .doc(authResult.user?.uid)
-            .set({'username': username, 'email': email, 'admin': admin});
+            .set({'username': username, 'email': email, 'admin': admin,'id': id});
         authResult.user?.updateDisplayName(username);
         userName = username;
         isAdmin = admin;

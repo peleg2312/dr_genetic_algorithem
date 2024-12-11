@@ -18,7 +18,7 @@ class Gene {
     bool result = true;
     if (time <= doctor.endTime &&
         time >= doctor.startTime &&
-        doctor.checkAvelability(time - doctor.startTime, day) == true)  {
+        doctor.checkAvelability(time - doctor.startTime, day) == true && doctor.specialization.contains(patient.healthCondition))  {
     } else {
       result = false;
     }

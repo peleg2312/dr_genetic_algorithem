@@ -1,10 +1,16 @@
 // ignore_for_file: unused_import
+import 'dart:collection';
+import 'dart:ffi';
+
 import 'package:dr_app/model/appointment.dart';
+import 'package:dr_app/model/doctor.dart';
 import 'package:dr_app/provider/appointment_provider.dart';
 import 'package:dr_app/provider/auth_provider.dart';
+import 'package:dr_app/provider/doctors_provider.dart';
 import 'package:dr_app/provider/patient_provider.dart';
 import 'package:dr_app/styles/colors.dart';
 import 'package:dr_app/styles/days.dart';
+import 'package:dr_app/styles/healthConditions.dart';
 import 'package:dr_app/styles/styles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +38,11 @@ class _ClientMainPageState extends State<ClientMainPage> {
     } catch (e) {
       print(e);
     }
-
+    try {
+      Provider.of<DoctorProvider>(context, listen: false).fetchDoctorData(context);
+    } catch (e) {
+      print(e);
+    }
     super.initState();
   }
 
@@ -41,7 +51,8 @@ class _ClientMainPageState extends State<ClientMainPage> {
     var size = MediaQuery.of(context).size;
     var height = size.height;
     var width = size.width;
-    myAppointment = Provider.of<AppointmentProvider>(context).getPatientAppointment();
+    myAppointment = Provider.of<AppointmentProvider>(context).getPatientAppointment(context);
+    
     return Scaffold(
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -61,7 +72,7 @@ class _ClientMainPageState extends State<ClientMainPage> {
                   ? const Center(
                       child: Text("there are no appointment yet"),
                     )
-                  : AppointmentCard(context, myAppointment!),
+                  : AppointmentCard(context, myAppointment!,[],true),
                   
               SizedBox(
                 height: height * 0.3,
@@ -77,9 +88,11 @@ class _ClientMainPageState extends State<ClientMainPage> {
 
 class AppointmentButton extends StatelessWidget {
   const AppointmentButton({Key? key}) : super(key: key);
+  
 
   @override
   Widget build(BuildContext context) {
+    HashMap<int,Doctor> doctors = Provider.of<DoctorProvider>(context).doctorMap;
     TextEditingController doctorNameController = TextEditingController();
     TextEditingController healnaseController = TextEditingController();
     TextEditingController dateController = TextEditingController();
@@ -91,7 +104,7 @@ class AppointmentButton extends StatelessWidget {
     return Center(
       child: InkWell(
         onTap: () {
-          _showDialog(context, doctorNameController, healnaseController, dateController, timeController);
+          _showDialog(context, doctorNameController, healnaseController, dateController, timeController,doctors);
         },
         child: Container(
           width: width * 0.6,
@@ -119,7 +132,7 @@ class AppointmentButton extends StatelessWidget {
       TextEditingController doctorNameController,
       TextEditingController healnaseController,
       TextEditingController dateController,
-      TextEditingController timeController) {
+      TextEditingController timeController,HashMap<int,Doctor> doctors) {
     showDialog(
         context: context,
         builder: ((context) {
@@ -131,57 +144,45 @@ class AppointmentButton extends StatelessWidget {
             ),
             content: Column(
               children: [
-                TextFormField(
-                  cursorColor: const Color.fromARGB(255, 54, 149, 244),
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
-                      labelText: "Doctor's name",
-                      contentPadding: const EdgeInsets.only(left: 16.0, top: 20.0, right: 16.0, bottom: 5.0)),
-                  controller: doctorNameController,
-                  autofocus: true,
-                  style: const TextStyle(
-                    fontSize: 22.0,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  keyboardType: TextInputType.text,
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLength: 15,
+                Padding(
+                  padding: const EdgeInsets.only(top: 10,bottom: 20),
+                  child: DropdownMenu(dropdownMenuEntries: doctors.values
+                            .map<DropdownMenuEntry<String>>(
+                                (Doctor doctor) {
+                          return DropdownMenuEntry<String>(
+                            value: doctor.name,
+                            label: doctor.name,
+                          );
+                        }).toList(),controller: doctorNameController,
+                        textStyle: TextStyle(color: Colors.white),
+                        width: 200,helperText: "Select Doctor",),
                 ),
-                TextFormField(
-                  cursorColor: const Color.fromARGB(255, 54, 149, 244),
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
-                      labelText: "Health concern",
-                      contentPadding: const EdgeInsets.only(left: 16.0, top: 10.0, right: 16.0, bottom: 5.0)),
-                  controller: healnaseController,
-                  autofocus: true,
-                  style: const TextStyle(
-                    fontSize: 22.0,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  keyboardType: TextInputType.text,
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLength: 15,
+                Padding(
+                  padding: const EdgeInsets.only(top: 10,bottom: 20),
+                  child: DropdownMenu(dropdownMenuEntries: Health.values
+                            .map<DropdownMenuEntry<String>>(
+                                (Health health) {
+                          return DropdownMenuEntry<String>(
+                            value: health.name,
+                            label: health.name,
+                          );
+                        }).toList(),controller: healnaseController,
+                        textStyle: TextStyle(color: Colors.white),width: 200,helperText: "Select Health",),
                 ),
-                TextFormField(
-                  cursorColor: const Color.fromARGB(255, 54, 149, 244),
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
-                      labelText: "Preferred Date",
-                      contentPadding: const EdgeInsets.only(left: 16.0, top: 10.0, right: 16.0, bottom: 5.0)),
-                  controller: dateController,
-                  autofocus: true,
-                  style: const TextStyle(
-                    fontSize: 22.0,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  keyboardType: TextInputType.text,
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLength: 15,
+                Padding(
+                  padding: const EdgeInsets.only(top: 10,bottom: 20),
+                  child: DropdownMenu(dropdownMenuEntries: Days.values
+                            .map<DropdownMenuEntry<int>>(
+                                (Days day) {
+                          return DropdownMenuEntry<int>(
+                            value: day.index,
+                            label: day.name,
+                          );
+                        }).toList(),controller: dateController,
+                        textStyle: TextStyle(color: Colors.white),width: 200,
+                        helperText: "Select Day",),
                 ),
+                
                 TextFormField(
                   cursorColor: const Color.fromARGB(255, 54, 149, 244),
                   decoration: InputDecoration(
@@ -224,7 +225,7 @@ class AppointmentButton extends StatelessWidget {
                       timeController,
                       healnaseController,
                       doctorNameController,
-                      context
+                      Provider.of<AuthProviderApp>(context, listen: false).userId
                     );
                     }
                     

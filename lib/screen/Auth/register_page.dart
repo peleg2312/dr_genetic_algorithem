@@ -14,6 +14,8 @@ class _RegisterPageState extends State<RegisterPage> {
   var _userEmail = '';
   var _userName = '';
   var _userPassword = '';
+  
+  var _userId = '';
 
   //output: if valid login to your account
   void _trySubmit() {
@@ -23,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (isValid!) {
       _formKey.currentState!.save();
       Provider.of<AuthProviderApp>(context, listen: false)
-          .submitAuthForm(_userEmail.trim(), _userPassword.trim(), _userName.trim(), _isLogin, false, context);
+          .submitAuthForm(_userEmail.trim(), _userPassword.trim(), _userName.trim(),_userId.trim(), _isLogin, false, context);
     }
   }
 
@@ -129,6 +131,40 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ],
+    );}
+
+  //output: new widget Stack with TextFormField
+  Widget _IdWidget() {
+    return Stack(
+      children: [
+        TextFormField(
+          keyboardType: TextInputType.name,
+          textInputAction: TextInputAction.next,
+          key: ValueKey('id'),
+          validator: (value) {
+            if (value!.isEmpty || value.length < 4) {
+              return 'id must be at least 4 characters long.';
+            }
+            return null;
+          },
+          onSaved: (value) {
+            _userId = value!;
+          },
+          style: TextStyle(
+            fontSize: 22.0,
+            color: Colors.white70,
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: const InputDecoration(
+            border: UnderlineInputBorder(),
+            labelText: 'Id',
+            helperText: '',
+            prefixIcon: Icon(
+              Icons.perm_identity,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -181,7 +217,7 @@ class _RegisterPageState extends State<RegisterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  height: height * 0.6,
+                  height: height * 0.7,
                   margin: EdgeInsets.symmetric(horizontal: 15),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16.0),
@@ -235,6 +271,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   _nameWidget(),
                                   _emailWidget(),
                                   _passwordWidget(),
+                                  _IdWidget(),
                                   _submitButton(),
                                 ],
                               ),

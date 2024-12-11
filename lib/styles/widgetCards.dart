@@ -1,8 +1,11 @@
 //input: context, Appointment
 //output: return widget that display appointment card
+import 'dart:collection';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dr_app/model/appointment.dart';
 import 'package:dr_app/model/doctor.dart';
+import 'package:dr_app/screen/more_screen.dart';
 import 'package:dr_app/styles/colors.dart';
 import 'package:dr_app/styles/days.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +14,7 @@ import '../model/patient.dart';
 
   List<Days> days = Days.values;
 
-Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
+Widget AppointmentCard(BuildContext context, Appointment myAppointment,List<Appointment> list,bool moreMode) {
   return Column(
     children: [
       Container(
@@ -30,17 +33,25 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
                 children: [
                   
                   
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Doctor: " + myAppointment.doctorName[0].toUpperCase()+myAppointment.doctorName.substring(1) , style: const TextStyle(color: Colors.white,fontSize: 15)),
-                          const SizedBox(
-                            height: 2,
-                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Doctor: " + myAppointment.doctorName[0].toUpperCase()+myAppointment.doctorName.substring(1) , style: const TextStyle(color: Colors.white,fontSize: 15)),
+                              const SizedBox(
+                                height: 2,
+                              ),Text("Patient: " + myAppointment.patientName[0].toUpperCase()+myAppointment.patientName.substring(1) , style: const TextStyle(color: Colors.white,fontSize: 15)),
+                            ],
+                          ),moreMode ==false? IconButton(onPressed: () {Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => MoreData(list: list)));}, icon: Icon(Icons.more,color: Colors.white70,)):Container()
                         ],
                       ),
-                  Text("Patient: " + myAppointment.patientName[0].toUpperCase()+myAppointment.patientName.substring(1) , style: const TextStyle(color: Colors.white,fontSize: 15)),
+
+                  
                     
                   const SizedBox(
                     height: 20,
@@ -64,7 +75,7 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
                           width: 5,
                         ),
                         Text(
-                          days[myAppointment.day].name,
+                          days[myAppointment.day -1].name,
                           style: const TextStyle(color: Colors.white),
                         ),
                         const SizedBox(
@@ -122,7 +133,7 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
   );
 }
 
-  Widget DoctorCard(BuildContext context, Doctor doctor) {
+  Widget DoctorCard(BuildContext context, Doctor doctor,HashMap<int,Doctor> list,bool moreMode) {
     return Column(
       children: [
         Container(
@@ -139,6 +150,7 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
                 child: Column(
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -149,7 +161,9 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
                               height: 2,
                             ),
                           ],
-                        ),
+                        ),moreMode ==false? IconButton(onPressed: () {Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => MoreData(list: list)));}, icon: Icon(Icons.more,color: Colors.white70,)):Container()
                       ],
                     ),
                     const SizedBox(
@@ -229,7 +243,7 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
     );
   }
 
-  Widget PatientAppintmentCard(BuildContext context, Patient patient) {
+  Widget PatientAppintmentCard(BuildContext context, Patient patient,HashMap<int,Patient> list,bool moreMode) {
     return Column(
       children: [
         Container(
@@ -246,6 +260,7 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
                 child: Column(
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         
                         Column(
@@ -257,7 +272,9 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
                               height: 2,
                             ),
                           ],
-                        ),
+                        ),moreMode ==false? IconButton(onPressed: () {Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => MoreData(list: list)));}, icon: Icon(Icons.more,color: Colors.white70,)):Container()
                       ],
                     ),
                     const SizedBox(
@@ -313,7 +330,7 @@ Widget AppointmentCard(BuildContext context, Appointment myAppointment) {
                           ),
                           Flexible(
                             child: Text(
-                              days[patient.preferredDay].name.substring(0,3) + "/" + patient.preferredTime.toString(),
+                              days[patient.preferredDay -1].name+ "/" + patient.preferredTime.toString(),
                               style: const TextStyle(color: Colors.white),
                             ),
                           ),

@@ -9,7 +9,6 @@ import 'patient.dart';
 class Individual {
   int fitness = 0;
   List<List<Gene>> genes = List.generate(5, (_) => []);
-  //List<List<List<bool>>> avelability = List.generate(5, (_) => []);
   late HashMap<int,Doctor> doctors;
   late HashMap<int,Patient> patients;
   var rng = Random();
@@ -21,7 +20,7 @@ class Individual {
     this.patients = new HashMap.from(patients); 
     this.doctors= new HashMap.from(doctors);
     for(MapEntry<int, Doctor> doctor in this.doctors.entries){
-      doctor.value.avelability = List<List<bool>>.filled(5, List<bool>.filled((doctor.value.endTime-doctor.value.startTime)*2, false));;
+      doctor.value.avelability= List.generate(5, (index) => List.generate(((doctor.value.endTime-doctor.value.startTime)*2), (_)=>false));
     }
     for (MapEntry<int, Patient> element in this.patients.entries) {
       Doctor doctor = doctors[rng.nextInt(doctors.length)]!;
@@ -29,8 +28,8 @@ class Individual {
       int time = rng.nextInt(doctor.endTime - doctor.startTime) + doctor.startTime;
       int day = rng.nextInt(5);
       Gene cGene = new Gene(patient: patient, doctor: doctor, time: time, day: day);
-      while( !doctor.specialization.contains(patient.healthCondition) && cGene.checkIfGeneIsValid() == false){
-        doctor = doctors[rng.nextInt(doctors.length)]!;
+      while(cGene.checkIfGeneIsValid() == false){
+        doctor = this.doctors[rng.nextInt(doctors.length)]!;
         time = rng.nextInt(doctor.endTime - doctor.startTime) + doctor.startTime;
         day = rng.nextInt(5);
         cGene = new Gene(patient: patient, doctor: doctor, time: time, day: day);
@@ -47,7 +46,7 @@ class Individual {
       this.patients =new HashMap.from(patients); 
       this.doctors= new HashMap.from(doctors);
       for(MapEntry<int, Doctor> doctor in this.doctors.entries){
-      doctor.value.avelability = List<List<bool>>.filled(5, List<bool>.filled((doctor.value.endTime-doctor.value.startTime)*2, false));;
+      doctor.value.avelability= List.generate(5, (index) => List.generate(((doctor.value.endTime-doctor.value.startTime)*2), (_)=>false));
     }
 
       for (var elements in this.genes) {
@@ -63,7 +62,7 @@ class Individual {
       this.patients =new HashMap.from(patients); 
       this.doctors= new HashMap.from(doctors);
       for(MapEntry<int, Doctor> doctor in this.doctors.entries){
-      doctor.value.avelability = List<List<bool>>.filled(5, List<bool>.filled((doctor.value.endTime-doctor.value.startTime)*2, false));;
+      doctor.value.avelability= List.generate(5, (index) => List.generate(((doctor.value.endTime-doctor.value.startTime)*2), (_)=>false));
     }
 
       
@@ -103,6 +102,9 @@ class Individual {
       fitness -= (g.patient.preferredTime - g.time).abs()*10;
       if(g.day != g.patient.preferredDay-1){
         fitness -= 30;
+      }
+      if(!g.doctor.specialization.contains(g.patient.healthCondition)){
+        fitness -= 10000;
       }
       }
     }

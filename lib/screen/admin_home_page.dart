@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:isolate';
 import 'package:dr_app/model/appointment.dart';
 import 'package:dr_app/model/doctor.dart';
+import 'package:dr_app/model/individual.dart';
 import 'package:dr_app/model/patient.dart';
 import 'package:dr_app/provider/shedule.dart';
 import 'package:dr_app/provider/appointment_provider.dart';
@@ -30,14 +31,18 @@ class _AdminMainPageState extends State<AdminMainPage> {
   HashMap<int, Patient> patients = HashMap<int, Patient>();
   List<Appointment> appointments = [];
   HashMap<int, Doctor> doctors = HashMap<int, Doctor>();
-  var fittest = null;
+  late Individual fittest;
+  bool updateToFireBase = false;
   bool running = false;
   double generationCount = 1.0;
   List<Days> days = Days.values;
+  static int first = 0;
+  Data data = Data();
 
   //output: fetch data from Firebase
   @override
   void initState() {
+    
     try {
       Provider.of<DoctorProvider>(context, listen: false).fetchDoctorData(context);
     } catch (e) {
@@ -59,10 +64,17 @@ class _AdminMainPageState extends State<AdminMainPage> {
 
   @override
   Widget build(BuildContext context) {
-    Data data = Data();
-    patients = data.patinets;
-    doctors = data.doctors;
+    if(updateToFireBase == true){
+      Provider.of<AppointmentProvider>(context).addAppoitnmentsToFirebase(fittest);
+      setState(() {
+        updateToFireBase = false;
+      });
+    }
+    patients = Provider.of<PatientProvider>(context).patientMap;
+    doctors = Provider.of<DoctorProvider>(context).doctorMap;
+    print(appointments.length);
     appointments = Provider.of<AppointmentProvider>(context).appointments;
+    print(appointments.length);
     Schedule schedule = Schedule(doctors, patients);
     var size = MediaQuery.of(context).size;
     var height = size.height;
@@ -82,7 +94,8 @@ class _AdminMainPageState extends State<AdminMainPage> {
                           title: const Text("Start?"),
                           actions: [
                             TextButton(
-                                onPressed: () async {                    
+                                onPressed: () async {   
+                                  Navigator.of(context).pop();                 
                                   _runAlgorithm(schedule, context);
                                 },
                                 child: const Text("yes")),
@@ -142,9 +155,9 @@ class _AdminMainPageState extends State<AdminMainPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                patients.isEmpty
+                doctors.isEmpty
                     ? const Center(
-                        child: Text("there are no appointments request",
+                        child: Text("there are no doctors",
                             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
                       )
                     : Container(
@@ -152,22 +165,22 @@ class _AdminMainPageState extends State<AdminMainPage> {
                         width: 400,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[Text(doctors.length.toString()+ " Doctors", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),DoctorCard(context, doctors.values.toList()[0])],
+                          children: <Widget>[Text(doctors.length.toString()+ " Doctors", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),DoctorCard(context, doctors.values.toList()[0],doctors,false)],
                         ),
                       ),
                 SizedBox(
                   height: height * 0.05,
                 ),
-                doctors.isEmpty
+                patients.isEmpty
                     ? const Center(
-                        child: Text("there is no doctors", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                        child: Text("there is no patients", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
                       )
                     : Container(
                         height: 250,
                         width: 400,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[ Text(patients.length.toString()+ " Patients", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),PatientAppintmentCard(context, patients.values.toList()[0])],
+                          children: <Widget>[ Text(patients.length.toString()+ " Patients", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),PatientAppintmentCard(context, patients.values.toList()[0],patients,false)],
                         ),
                       ),
                 SizedBox(
@@ -177,7 +190,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
               ]),
             ),
           ),SizedBox(width: width * 0.2,),
-          //AlgorithmAppearance()
+          AlgorithmAppearance()
             
           
         ],
@@ -186,7 +199,6 @@ class _AdminMainPageState extends State<AdminMainPage> {
   }
 
   Widget AlgorithmAppearance(){
-    appointments = Provider.of<AppointmentProvider>(context,listen:false).getIndividualAppointments(fittest);
     return running?
           Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -196,12 +208,12 @@ class _AdminMainPageState extends State<AdminMainPage> {
                       color: const Color.fromARGB(255, 114, 20, 130),
                       size: 200,
                     ),),
-                    Text((generationCount/10).toString()+"%")]):appointments.isEmpty?Container():Container(
-                        height: 220,
+                    Text((generationCount/20).round().toString()  +"%")]):appointments.isEmpty?Container(child: Text("No Appointments, Run The Genetic Algorithm",style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600,),)):Container(
+                        height: 400,
                         width: 400,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[Text(appointments.length.toString()+ " Appointments", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),AppointmentCard(context, appointments[0])],
+                          children: <Widget>[Text(((appointments.length).toInt()).toString()+ " Appointments", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),AppointmentCard(context, appointments[0],appointments,false),IconButton(onPressed: (){Provider.of<AppointmentProvider>(context, listen: false).deleteAppointments();}, icon: Icon(Icons.delete))],
                         ),
                       );
             
@@ -209,21 +221,24 @@ class _AdminMainPageState extends State<AdminMainPage> {
 
 
 
+
   void _runAlgorithm(Schedule schedule, BuildContext context) async{
     ReceivePort myReceivePort = ReceivePort();
     await Isolate.spawn(schedule.runGeneticAlgorithm, myReceivePort.sendPort);
     setState(() {running = true;});
-    Navigator.of(context).pop();
     myReceivePort.listen((result){
-      if(result != "finished"){
+      if(result == "update"){
         setState(() {
         generationCount++;
       });
       }else{
         print("end");
-        setState((){running = false;
-        fittest = schedule.population.individuals[0];
+
+        setState(() {running = false;
+        fittest = result;
+        print(fittest.fitness);
         generationCount = 0;
+        updateToFireBase = true;
         });
       }
     });

@@ -1,10 +1,6 @@
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:isolate';
 import 'dart:math';
-
-import 'package:dr_app/provider/appointment_provider.dart';
-import 'package:provider/provider.dart';
 
 import '../model/doctor.dart';
 import '../model/gene.dart';
@@ -18,7 +14,10 @@ class Schedule {
   late Individual secondFittest;
   bool isRuning = false;
   int generationCount = 0;
-  int generationSize = 1000;
+  int generationSize = 2000;
+  double tournamentPrecentage = 0.2;
+  double crossoverPrecentage = 0.7;
+  double mutatePrecentage = 0.1;
   late HashMap<int, Patient> patients;
   late HashMap<int, Doctor> doctors;
   var rng = Random();
@@ -26,74 +25,43 @@ class Schedule {
   Schedule(HashMap<int, Doctor> doctors, HashMap<int, Patient> patients) {
     this.doctors = doctors;
     this.patients = patients;
-    population = Population(patients: this.patients, doctors: this.doctors);
+    population = Population(patients:HashMap<int,Patient>.from(this.patients), doctors: HashMap<int,Doctor>.from(this.doctors));
   }
 
   void runGeneticAlgorithm(SendPort sendPort)  async{
-
     isRuning = true;
     population.individuals.sort((a, b) => b.fitness.compareTo(a.fitness));
 
     for (int i = 0; i < generationSize; i++) {
       print(i);
-      if (population.individuals[0].fitness == 0) {
-        break;
-      }
       int populationLength = population.individuals.length;
-      population.individuals = population.individuals.sublist(0, populationLength ~/ 5);
+      population.individuals = population.individuals.sublist(0, (populationLength * tournamentPrecentage).toInt());
 
-      for (int i = 0; i < populationLength / 5; i++) {
-        crossover(population.individuals[rng.nextInt(populationLength ~/ 5)],
-            population.individuals[rng.nextInt(populationLength ~/ 5)]);
+      for (int i = 0; i < (populationLength * crossoverPrecentage)/2; i++) {
+        crossover(population.individuals[rng.nextInt(population.individuals.length)],
+            population.individuals[rng.nextInt(population.individuals.length)]);
       }
 
-      for (int i = 0; i < populationLength / 5; i++) {
-        mutate(population.individuals[rng.nextInt(populationLength ~/ 5)]);
-      }
-
-      for (int i = 0; i < populationLength / 5; i++) {
-        population.individuals.add(new Individual(doctors, patients));
+      for (int i = 0; i < populationLength * mutatePrecentage; i++) {
+        mutate(population.individuals[rng.nextInt((populationLength*tournamentPrecentage).toInt())]);
       }
 
       population.calculateFitness();
       population.individuals.sort((a, b) => b.fitness.compareTo(a.fitness));
-            print(population.individuals[0].fitness);
+      fittest = population.individuals[0];
+      print(fittest.fitness);
       generationCount++;
-      sendPort.send("update");
+      
+        sendPort.send("update");
+      
+      
+      if(generationCount%100 == 0){
+        crossoverPrecentage -= 0.02;
+        mutatePrecentage += 0.02;
+      }
     }
-    sendPort.send("finished");
+    sendPort.send(population.individuals[0]);
     
-  }
-
-  Future<void> runGeneticAlgorithmForLoop(SendPort sendPort) async{
-    for (int i = 0; i < generationSize; i++) {
-      print(i);
-      if (population.individuals[0].fitness == 0) {
-        break;
-      }
-      int populationLength = population.individuals.length;
-      population.individuals = population.individuals.sublist(0, populationLength ~/ 5);
-
-      for (int i = 0; i < populationLength / 5; i++) {
-        crossover(population.individuals[rng.nextInt(populationLength ~/ 5)],
-            population.individuals[rng.nextInt(populationLength ~/ 5)]);
-      }
-
-      for (int i = 0; i < populationLength / 5; i++) {
-        mutate(population.individuals[rng.nextInt(populationLength ~/ 5)]);
-      }
-
-      for (int i = 0; i < populationLength / 5; i++) {
-        population.individuals.add(new Individual(doctors, patients));
-      }
-
-      population.calculateFitness();
-      population.individuals.sort((a, b) => b.fitness.compareTo(a.fitness));
-            print(population.individuals[0].fitness);
-      generationCount++;
-    }
-    sendPort.send("update");
-    //Provider.of<AppointmentProvider>(context).addAppoitnmentsToFirebase(population.individuals[0]);
     
   }
 
@@ -119,120 +87,80 @@ class Schedule {
   }
 
   void crossover(Individual parent1, Individual parent2) {
-    Individual child1 = Individual.WithAddingGenes(doctors, patients);
-    int length = rng.nextInt(patients.length);
-    int i = 0;
-    int j = 0;
-    for (var gene in parent1.genes) {
-      for (var g in gene) {
-        if (i == length) {
-          break;
-        }
-        child1.genes[j].add(g);
-        child1.doctors[g.doctor.Id]?.avelability[g.day][(g.time - g.doctor.startTime) * 2] = true;
-        i++;
-      }
-      j++;
-    }
+    int geneLength = rng.nextInt(patients.length);
 
-    i = 0;
-    j = 0;
-    for (var gene in parent2.genes) {
-      for (var g in gene) {
-        if (!_geneExists(child1.genes, g) &&
-            child1.doctors[g.doctor.Id]!.checkAvelability((g.time - g.doctor.startTime), g.day)) {
-          child1.genes[j].add(g);
-          child1.doctors[g.doctor.Id]?.avelability[g.day][(g.time - g.doctor.startTime) * 2] = true;
-        } else if (!_geneExists(child1.genes, g) &&
-            !child1.doctors[g.doctor.Id]!.checkAvelability((g.time - g.doctor.startTime), g.day)) {
-          Doctor altDoctor = g.doctor;
-          Gene newG = parent1.findPatient(g.patient.Id);
-          if (newG.doctor.specialization.contains(g.patient.healthCondition) && child1.doctors[newG.doctor.Id]!.checkAvelability((newG.time - newG.doctor.startTime), newG.day) &&
-              !_geneExists(child1.genes, newG)) {
-            child1.genes[j].add(newG);
-            child1.doctors[newG.doctor.Id]?.avelability[newG.day][(newG.time - newG.doctor.startTime) * 2] = true;
-          } else {
-            int altTime = rng.nextInt(g.doctor.endTime - g.doctor.startTime) + g.doctor.startTime;
-            int altDay = rng.nextInt(5);
-
-            int i = 0;
-            while (!altDoctor.specialization.contains(g.patient.healthCondition) && !child1.doctors[altDoctor.Id]!.checkAvelability((altTime - altDoctor.startTime), altDay)) {
-              altTime = rng.nextInt(altDoctor.endTime - altDoctor.startTime) + altDoctor.startTime;
-              altDay = rng.nextInt(5);
-              i++;
-              if (i >= 5) {
-                altDoctor = doctors.values.elementAt(rng.nextInt(doctors.length));
-              }
-            }
-            child1.genes[j].add(new Gene(patient: g.patient, doctor: altDoctor, time: altTime, day: altDay));
-            child1.doctors[altDoctor.Id]?.avelability[altDay][(altTime - altDoctor.startTime) * 2] = true;
-          }
-        }
-        i++;
-      }
-      j++;
-    }
+    Individual child1 = createChild(parent1, parent2, geneLength);
+    Individual child2 = createChild(parent1, parent2, geneLength);
     child1.calcFitness();
     population.individuals.add(child1);
-
-    Individual child2 = Individual.WithAddingGenes(doctors, patients);
-    i = 0;
-    j = 0;
-    for (var gene in parent2.genes) {
-      for (var g in gene) {
-        if (i == length) {
-          break;
-        }
-        child2.genes[j].add(g);
-        child2.doctors[g.doctor.Id]?.avelability[g.day][(g.time - g.doctor.startTime) * 2] = true;
-        i++;
-      }
-      j++;
-    }
-
-    i = 0;
-    j = 0;
-    for (var gene in parent1.genes) {
-      for (var g in gene) {
-        if (!_geneExists(child2.genes, g) &&
-            child2.doctors[g.doctor.Id]!.checkAvelability((g.time - g.doctor.startTime), g.day)) {
-          child2.genes[j].add(g);
-          child2.doctors[g.doctor.Id]?.avelability[g.day][(g.time - g.doctor.startTime) * 2] = true;
-        } else if (!_geneExists(child2.genes, g) &&
-            !child2.doctors[g.doctor.Id]!.checkAvelability((g.time - g.doctor.startTime), g.day)) {
-          Doctor altDoctor = g.doctor;
-          Gene newG = parent2.findPatient(g.patient.Id);
-          if (newG.doctor.specialization.contains(g.patient.healthCondition) && child2.doctors[newG.doctor.Id]!.checkAvelability((newG.time - newG.doctor.startTime), newG.day) &&
-              !_geneExists(child2.genes, newG)) {
-            child2.genes[j].add(newG);
-            child2.doctors[newG.doctor.Id]?.avelability[newG.day][(newG.time - newG.doctor.startTime) * 2] = true;
-          } else {
-            int altTime = rng.nextInt(g.doctor.endTime - g.doctor.startTime) + g.doctor.startTime;
-            int altDay = rng.nextInt(5);
-            int i = 0;
-            while (!altDoctor.specialization.contains(g.patient.healthCondition) &&!child2.doctors[altDoctor.Id]!.checkAvelability((altTime - altDoctor.startTime), altDay)) {
-              altTime = rng.nextInt(altDoctor.endTime - altDoctor.startTime) + altDoctor.startTime;
-              altDay = rng.nextInt(5);
-              i++;
-              if (i >= 5) {
-                altDoctor = doctors.values.elementAt(rng.nextInt(doctors.length));
-              }
-            }
-            child2.genes[j].add(new Gene(patient: g.patient, doctor: altDoctor, time: altTime, day: altDay));
-            child2.doctors[altDoctor.Id]?.avelability[altDay][(altTime - altDoctor.startTime) * 2] = true;
-          }
-        }
-        i++;
-      }
-      j++;
-    }
-
     child2.calcFitness();
     population.individuals.add(child2);
   }
 
+  Individual createChild(Individual parent1, Individual parent2, int geneLength){
+    Individual child = Individual.WithAddingGenes(doctors, patients);
+    int i = 0;
+    int j = 0;
+    for (var gene in parent1.genes) {
+      for (var g in gene) {
+        if (i < geneLength) {
+          child.genes[j].add(g);
+          child.doctors[g.doctor.Id]?.avelability[g.day][(g.time - g.doctor.startTime) * 2] = true;
+          i++;
+        }
+      }
+      j++;
+    }
+    Doctor altDoctor;
+    int altTime;
+    int altDay;
+
+    i = 0;
+    j = 0;
+    for (var gene in parent2.genes) {
+      for (var g in gene) {
+        altDoctor = g.doctor;
+        altTime = g.time;
+        altDay = g.day;
+        if (!_geneExists(child.genes, g) &&
+            child.doctors[g.doctor.Id]!.checkAvelability((g.time - g.doctor.startTime), g.day)) {
+              child.genes[j].add(g);
+          child.doctors[altDoctor.Id]?.avelability[altDay][(altTime - altDoctor.startTime) * 2] = true;
+        } else if (!_geneExists(child.genes, g) &&
+            !child.doctors[g.doctor.Id]!.checkAvelability((g.time - g.doctor.startTime), g.day)) {
+          Gene newG = parent2.findPatient(g.patient.Id);
+          if (child.doctors[newG.doctor.Id]!.checkAvelability((newG.time - newG.doctor.startTime), newG.day) &&
+              !_geneExists(child.genes, newG)) {
+            altTime = newG.time;
+            altDay = newG.day;
+            altDoctor = newG.doctor;
+          } else {
+            i=0;
+            altTime = rng.nextInt(g.doctor.endTime - g.doctor.startTime) + g.doctor.startTime;
+            altDay = rng.nextInt(5);
+            while (!child.doctors[altDoctor.Id]!.checkAvelability((altTime - altDoctor.startTime), altDay)) {
+              while(!altDoctor.specialization.contains(g.patient.healthCondition) || i>=5){
+                altDoctor = doctors.values.elementAt(rng.nextInt(doctors.length));
+                i=0;
+              }
+              altTime = rng.nextInt(altDoctor.endTime - altDoctor.startTime) + altDoctor.startTime;
+              altDay = rng.nextInt(5);
+              
+              i++;
+            }
+          }
+          child.genes[j].add(new Gene(patient: g.patient, doctor: altDoctor, time: altTime, day: altDay));
+          child.doctors[altDoctor.Id]?.avelability[altDay][(altTime - altDoctor.startTime) * 2] = true;
+        }
+        i++;
+      }
+      j++;
+    }
+    return child;
+  }
+
+
   void mutate(Individual individual) {
-    var rng = Random();
     Individual mutate = new Individual.WithAddingGenes(doctors, patients);
 
     for (int i = 0; i < individual.genes.length; i++) {
@@ -247,7 +175,7 @@ class Schedule {
               
               altDoctor = doctors.values.elementAt(rng.nextInt(doctors.length));
 
-              while (!altDoctor.specialization.contains(gene.patient.healthCondition) &&altTime < altDoctor.startTime && altTime > altDoctor.endTime ) {
+              while (!altDoctor.specialization.contains(gene.patient.healthCondition) && altTime < altDoctor.startTime && altTime > altDoctor.endTime ) {
                 altDoctor = doctors.values.elementAt(rng.nextInt(doctors.length));
                 altTime = rng.nextInt(altDoctor.endTime - altDoctor.startTime) + altDoctor.startTime;
               }
@@ -256,12 +184,13 @@ class Schedule {
             } else {
               altDay = rng.nextInt(5);
             }
-          } while (!mutate.doctors[altDoctor.Id]!.checkAvelability(altTime - altDoctor.startTime, altDay));
+          }
+          while (!mutate.doctors[altDoctor.Id]!.checkAvelability(altTime - altDoctor.startTime, altDay));
           Gene newG = Gene(patient: gene.patient, doctor: altDoctor, time: altTime, day: altDay);
           mutate.genes[altDay].add(newG);
           mutate.doctors[altDoctor.Id]?.avelability[altDay][(altTime - altDoctor.startTime) * 2] = true;
         } else {
-          while ( !altDoctor.specialization.contains(gene.patient.healthCondition) &&!mutate.doctors[altDoctor.Id]!.checkAvelability(altTime - altDoctor.startTime, altDay)) {
+          while (!(altDoctor.specialization.contains(gene.patient.healthCondition) && mutate.doctors[altDoctor.Id]!.checkAvelability(altTime - altDoctor.startTime, altDay))) {
             altDoctor = doctors.values.elementAt(rng.nextInt(doctors.length));
             altTime = rng.nextInt(altDoctor.endTime - altDoctor.startTime) + altDoctor.startTime;
             altDay = rng.nextInt(5);

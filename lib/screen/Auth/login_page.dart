@@ -23,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
     if (isValid!) {
       _formKey.currentState!.save();
       Provider.of<AuthProviderApp>(context, listen: false)
-          .submitAuthForm(_userEmail.trim(), _userPassword.trim(), _userName.trim(), false, _isLogin, context);
+          .submitAuthForm(_userEmail.trim(), _userPassword.trim(), _userName.trim(),'' ,false, _isLogin, context);
     }
   }
 

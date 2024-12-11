@@ -5,8 +5,10 @@ import 'package:dr_app/model/appointment.dart';
 import 'package:dr_app/model/doctor.dart';
 import 'package:dr_app/model/gene.dart';
 import 'package:dr_app/model/individual.dart';
+import 'package:dr_app/provider/auth_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 
 class AppointmentProvider extends ChangeNotifier {
@@ -17,6 +19,7 @@ class AppointmentProvider extends ChangeNotifier {
 
   //output: getting data from firebase and putting it inside appointment list
   Future<void> fetchAppointmentData(context) async {
+    _appointments = [];
     try {
       await FirebaseFirestore.instance.collection('Appointment').get().then(
         (QuerySnapshot value) {
@@ -42,8 +45,22 @@ class AppointmentProvider extends ChangeNotifier {
 
   //input: patientId
   //output: get the patient appointment
-  Appointment getPatientAppointment() {
-    return _appointments.firstWhere((element) => element.patientId == int.parse(_auth.currentUser!.uid),orElse: ()=>Appointment(doctorName: "", time: 0, day: 0, patientName: "", patientId: 0));
+  Appointment getPatientAppointment(BuildContext ctx) {
+    int userId = Provider.of<AuthProviderApp>(ctx, listen: false).userId;
+    print(userId);
+    return _appointments.firstWhere((element) => element.patientId == userId,orElse: ()=>Appointment(doctorName: "", time: 0, day: 0, patientName: "", patientId: 0));
+  }
+
+  
+  //output: delete appointments from firebase
+  void deleteAppointments() {
+    _appointments.clear();
+    FirebaseFirestore.instance.collection('Appointment').get().then((snapshot) {
+  for (DocumentSnapshot ds in snapshot.docs){
+    ds.reference.delete();
+  };
+});
+notifyListeners();
   }
 
   //input: individual
@@ -63,18 +80,19 @@ class AppointmentProvider extends ChangeNotifier {
   //output: add new Appointment to Firebase and the local list
   Future<void> addAppoitnmentsToFirebase(Individual individual) async {
     saving = true;
+    
 
     for (var genes in individual.genes) {
       for (var gene in genes) {
         await FirebaseFirestore.instance.collection("Appointment").add({
         "doctorName": gene.doctor.name,
         "time": gene.time,
-        "day": gene.day,
+        "day": gene.day + 1,
         "patientName": gene.patient.name,
         "patientId": gene.patient.Id,
       });
 
-      _appointments.add(new Appointment(doctorName: gene.doctor.name, patientName:  gene.patient.name, day:   gene.day, time: gene.time, patientId: gene.patient.Id));
+      _appointments.add(new Appointment(doctorName: gene.doctor.name, patientName:  gene.patient.name, day:   gene.day +1, time: gene.time, patientId: gene.patient.Id));
       }
     }
      

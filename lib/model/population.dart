@@ -5,7 +5,7 @@ import 'individual.dart';
 import 'patient.dart';
 
 class Population {
-  int popSize = 3000;
+  int popSize = 1000;
   int fittest = 0;
   late HashMap<int, Doctor> doctors;
   late HashMap<int, Patient> patients;
@@ -13,8 +13,8 @@ class Population {
   Population({required HashMap<int, Doctor> doctors, required HashMap<int, Patient> patients}) {
     this.doctors = doctors;
     this.patients = patients;
-    individuals = List<Individual>.filled(popSize, Individual(this.doctors, this.patients));
-    initializePopulation();
+    individuals = List<Individual>.filled(popSize, Individual(HashMap<int,Doctor>.from(this.doctors), HashMap<int,Patient>.from(this.patients)));
+    //initializePopulation();
     individuals.sort((a, b) => b.fitness.compareTo(a.fitness));
   }
 
